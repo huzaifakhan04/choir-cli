@@ -26,3 +26,6 @@ choir.config.json
 .idea/
 .vscode/
 *.swp
+
+# local agent operating notes (private — not published)
+CLAUDE.md
