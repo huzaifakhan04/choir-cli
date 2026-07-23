@@ -1,0 +1,94 @@
+#!/usr/bin/env node
+"use strict";
+/**
+ * `/choir:share [view|suggest|write]` — opens (or reshares) this session on the
+ * relay and prints a join code. Opening the room is what "turns on" streaming:
+ * until this runs, the hooks stay silent. Registration uses the team's TEAM_KEY;
+ * the resulting host token is cached per-session so the hooks can stream.
+ */
+const crypto = require("crypto");
+const { execSync } = require("child_process");
+const { loadConfig, resolveDataDir, readSessionCache, writeSessionCache } = require("../lib/config");
+const { postJson } = require("../lib/relay");
+
+function arg(flag) {
+  const i = process.argv.indexOf(flag);
+  return i >= 0 ? process.argv[i + 1] : undefined;
+}
+
+function shortId(n) {
+  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+  const bytes = crypto.randomBytes(n);
+  let s = "";
+  for (const b of bytes) s += alphabet[b % alphabet.length];
+  return s;
+}
+
+function git(cmd, cwd) {
+  try {
+    return execSync(`git ${cmd}`, { cwd, stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return "";
+  }
+}
+
+function positionalScope() {
+  const a = process.argv.slice(2).find((x) => !x.startsWith("--") && ["view", "suggest", "write"].includes(x));
+  return a;
+}
+
+(async () => {
+  const scope = (positionalScope() || "view").toLowerCase();
+  const cfg = loadConfig();
+  const sessionId = arg("--session") || process.env.CLAUDE_SESSION_ID;
+  const dataDir = resolveDataDir();
+
+  if (!cfg.relayUrl || !cfg.teamKey) {
+    console.log(
+      "Choir isn't configured yet. Set a relay and team key:\n" +
+        "  npx choircode config --relay <url> --team-key <key> --name <you>\n" +
+        "(or export CHOIR_RELAY_URL, CHOIR_TEAM_KEY, CHOIR_NAME).",
+    );
+    process.exit(0);
+  }
+  if (!sessionId) {
+    console.log("Choir: couldn't determine the current session id (CLAUDE_SESSION_ID).");
+    process.exit(0);
+  }
+  const name = cfg.name || "host";
+
+  let cache = readSessionCache(dataDir, sessionId);
+  if (!cache || !cache.roomId || !cache.hostToken) {
+    const roomId = shortId(8);
+    const cwd = process.cwd();
+    const reg = await postJson(
+      `${cfg.relayUrl}/sessions/${roomId}`,
+      { name, cwd, branch: git("rev-parse --abbrev-ref HEAD", cwd), commit: git("rev-parse --short HEAD", cwd) },
+      { token: cfg.teamKey },
+    );
+    if (!reg.ok || !reg.json || !reg.json.token) {
+      console.log(`Choir: couldn't open a session on the relay (status ${reg.status}). ${reg.error || ""}`);
+      process.exit(0);
+    }
+    cache = { roomId, relayUrl: cfg.relayUrl, hostToken: reg.json.token, name };
+    writeSessionCache(dataDir, sessionId, cache);
+  }
+
+  const inv = await postJson(
+    `${cfg.relayUrl}/sessions/${cache.roomId}/invites`,
+    { scope },
+    { token: cache.hostToken },
+  );
+  if (!inv.ok || !inv.json || !inv.json.code) {
+    console.log(`Choir: couldn't create an invite (status ${inv.status}).`);
+    process.exit(0);
+  }
+
+  console.log(
+    `\n🎶 Choir is live for this session. Teammates can join with:\n\n` +
+      `    npx choircode join ${inv.json.code}\n\n` +
+      `Scope: ${scope}  (view = watch · suggest = propose steers · write = steer directly)\n` +
+      `Relay: ${cfg.relayUrl}\n`,
+  );
+  process.exit(0);
+})();
