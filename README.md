@@ -45,10 +45,16 @@ Early, built in the open. Phased roadmap:
 - [x] **Phase 0** — de-risk spike: hook→relay streaming + `Stop`-hook steer injection *(proven against Claude Code 2.1.205)*
 - [x] **Phase 1** — Watch: stream a live session, replay history + tail live from the terminal
 - [x] **Phase 2** — Redirect: teammates steer a running session; host controls (pause/kick/scope/roster)
-- [ ] **Phase 3** — Handoff
-- [ ] **Phase 4** — Distribution (plugin marketplace + `npx skills add`) & polish
+- [x] **Phase 3** — Handoff: transfer the driver's seat cross-machine with the shared context
+- [ ] **Phase 4** — Distribution polish (marketplace ✓, npm publish, `npx skills add`)
 
-Phases 1–2 are verified end-to-end against real Claude Code + a real Cloudflare `workerd` runtime.
+Phases 1–3 are verified end-to-end against real Claude Code 2.1.205 + a real Cloudflare `workerd` runtime.
+
+## Commands
+
+**Host** (Claude Code, via the `choir` plugin): `/choir:share [view|suggest|write]`, `/choir:roster`, `/choir:pause`, `/choir:resume`, `/choir:scope <name> <scope>`, `/choir:kick <name>`, `/choir:approve`, `/choir:handoff <name>`, `/choir:take-handoff`.
+
+**Viewer** (terminal): `npx choircode join <code>`, `npx choircode take <code> --name <you>`, `npx choircode config --relay <url>`.
 
 ## Repository layout
 
