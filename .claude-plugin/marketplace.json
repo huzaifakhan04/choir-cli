@@ -1,0 +1,23 @@
+{
+  "name": "choir",
+  "owner": {
+    "name": "huzaifakhan04",
+    "url": "https://github.com/huzaifakhan04"
+  },
+  "metadata": {
+    "description": "Multiplayer for Claude Code — watch, redirect, and hand off a live agent session as a team.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "choir",
+      "source": "./plugin",
+      "description": "Watch, redirect, and hand off one live Claude Code session as a team. Streams the session to a Cloudflare relay; teammates join from their terminal with `npx choircode join`.",
+      "version": "0.1.0",
+      "author": { "name": "huzaifakhan04" },
+      "homepage": "https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26",
+      "license": "MIT",
+      "keywords": ["multiplayer", "collaboration", "agent", "team", "realtime"]
+    }
+  ]
+}

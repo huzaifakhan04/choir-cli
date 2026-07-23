@@ -43,10 +43,12 @@ The relay never sees your Claude API key, and secrets are stripped on the host b
 Early, built in the open. Phased roadmap:
 
 - [x] **Phase 0** — de-risk spike: hook→relay streaming + `Stop`-hook steer injection *(proven against Claude Code 2.1.205)*
-- [ ] **Phase 1** — Watch
-- [ ] **Phase 2** — Redirect + host controls
+- [x] **Phase 1** — Watch: stream a live session, replay history + tail live from the terminal
+- [x] **Phase 2** — Redirect: teammates steer a running session; host controls (pause/kick/scope/roster)
 - [ ] **Phase 3** — Handoff
-- [ ] **Phase 4** — Distribution (plugin marketplace + `npx skills add`) & docs
+- [ ] **Phase 4** — Distribution (plugin marketplace + `npx skills add`) & polish
+
+Phases 1–2 are verified end-to-end against real Claude Code + a real Cloudflare `workerd` runtime.
 
 ## Repository layout
 
