@@ -1,0 +1,17 @@
+name = "choir-relay"
+main = "src/worker.ts"
+compatibility_date = "2025-06-01"
+
+# One SQLite-backed Durable Object per session. SQLite DOs are available on the
+# Cloudflare free plan, and outbound WebSocket fan-out is not billed.
+[[durable_objects.bindings]]
+name = "SESSION"
+class_name = "SessionDO"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SessionDO"]
+
+# Secrets (set for real with `wrangler secret put <NAME>`; locally via .dev.vars):
+#   TEAM_KEY           — the one pre-shared credential your team uses to open rooms
+#   TOKEN_SIGNING_KEY  — HS256 secret used to sign/verify session tokens
