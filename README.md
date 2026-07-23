@@ -319,11 +319,12 @@ Thanks to everyone who helps make Choir better.
   <tr>
     <td align="center">
       <a href="https://github.com/huzaifakhan04">
-        <img src="https://github.com/huzaifakhan04.png?size=100" width="80" height="80" alt="@huzaifakhan04" /><br />
+        <img src="https://images.weserv.nl/?url=github.com/huzaifakhan04.png&w=160&h=160&fit=cover&mask=circle" width="80" height="80" alt="@huzaifakhan04" /><br />
         <sub><b>huzaifakhan04</b></sub>
       </a>
     </td>
-    <!-- New contributors: copy the <td>…</td> block above and swap in the GitHub username. -->
+    <!-- New contributor? Copy the <td>…</td> block above and replace every "huzaifakhan04" with their GitHub username.
+         The images.weserv.nl proxy renders the avatar as a circle (mask=circle). -->
   </tr>
 </table>
 
