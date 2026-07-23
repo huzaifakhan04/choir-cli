@@ -315,18 +315,8 @@ claude --plugin-dir ./plugin                      # try the plugin without insta
 
 Thanks to everyone who helps make Choir better.
 
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/huzaifakhan04">
-        <img src="https://images.weserv.nl/?url=github.com/huzaifakhan04.png&w=160&h=160&fit=cover&mask=circle" width="80" height="80" alt="@huzaifakhan04" /><br />
-        <sub><b>huzaifakhan04</b></sub>
-      </a>
-    </td>
-    <!-- New contributor? Copy the <td>…</td> block above and replace every "huzaifakhan04" with their GitHub username.
-         The images.weserv.nl proxy renders the avatar as a circle (mask=circle). -->
-  </tr>
-</table>
+<a href="https://github.com/huzaifakhan04"><img src="https://images.weserv.nl/?url=github.com/huzaifakhan04.png&w=160&h=160&fit=cover&mask=circle" width="80" height="80" alt="huzaifakhan04" /></a>
+<!-- New contributor? Duplicate the <a>…</a> above and replace "huzaifakhan04" with their GitHub username (mask=circle keeps it a transparent circle). -->
 
 *Made something better? Open a PR and you'll be added here.*
 
