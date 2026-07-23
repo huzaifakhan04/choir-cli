@@ -313,13 +313,21 @@ claude --plugin-dir ./plugin                      # try the plugin without insta
 
 ## 👥 Contributors
 
-Thanks to everyone who helps make Choir better. This list updates automatically as people contribute.
+Thanks to everyone who helps make Choir better.
 
-<a href="https://github.com/huzaifakhan04/choir-cli/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=huzaifakhan04/choir-cli" alt="Contributors" />
-</a>
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/huzaifakhan04">
+        <img src="https://github.com/huzaifakhan04.png?size=100" width="80" height="80" alt="@huzaifakhan04" /><br />
+        <sub><b>huzaifakhan04</b></sub>
+      </a>
+    </td>
+    <!-- New contributors: copy the <td>…</td> block above and swap in the GitHub username. -->
+  </tr>
+</table>
 
-*Made something better? Send a PR and your avatar shows up here.*
+*Made something better? Open a PR and you'll be added here.*
 
 ---
 
