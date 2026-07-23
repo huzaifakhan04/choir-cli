@@ -157,9 +157,63 @@ async function cmdJoin(code) {
   }
 }
 
+function dataDir() {
+  return process.env.CHOIR_DATA_DIR || path.join(os.homedir(), ".choir");
+}
+
+async function cmdTake(code) {
+  if (!code) {
+    console.error("Missing join code. Usage: npx choircode take <code> --name <you>");
+    process.exit(1);
+  }
+  const relay = resolveRelay();
+  if (!relay) {
+    console.error("No relay set. Pass --relay <url> or run: npx choircode config --relay <url>");
+    process.exit(1);
+  }
+  const dash = code.indexOf("-");
+  const roomId = dash >= 0 ? code.slice(0, dash) : code;
+  const inviteId = dash >= 0 ? code.slice(dash + 1) : "";
+  const name = resolveName();
+
+  const red = await postJson(`${relay}/sessions/${roomId}/redeem`, { inviteId, name });
+  if (!red.ok || !red.json || !red.json.token) {
+    console.error(`Could not authenticate to the session (status ${red.status}).`);
+    process.exit(1);
+  }
+  const res = await fetch(`${relay}/sessions/${roomId}/take`, {
+    method: "POST",
+    headers: { "content-type": "application/json", Authorization: `Bearer ${red.json.token}` },
+    body: JSON.stringify({ name }),
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json || !json.token) {
+    console.error(`Could not take the handoff (status ${res.status}). ${(json && json.message) || ""}`);
+    console.error(`(The host must run /choir:handoff ${name} first.)`);
+    process.exit(1);
+  }
+
+  const dir = dataDir();
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, "pending-handoff.json"),
+    JSON.stringify({ roomId, relayUrl: relay, hostToken: json.token, name, bundle: json.bundle || "" }),
+    { mode: 0o600 },
+  );
+
+  console.log(`\n${pc.green("✅ You now hold the session.")} Context bundle:\n`);
+  console.log(json.bundle || "(no context captured yet)");
+  console.log(
+    `\nNext: start Claude Code in this repo and run ${pc.bold("/choir:take-handoff")} to load this context and continue as the driver.\n`,
+  );
+  process.exit(0);
+}
+
 (async () => {
   const cmd = process.argv[2];
-  if (cmd === "join") return cmdJoin(process.argv[3] && !process.argv[3].startsWith("-") ? process.argv[3] : undefined);
+  const positional = process.argv[3] && !process.argv[3].startsWith("-") ? process.argv[3] : undefined;
+  if (cmd === "join") return cmdJoin(positional);
+  if (cmd === "take") return cmdTake(positional);
   if (cmd === "config") return cmdConfig();
   return usage();
 })();

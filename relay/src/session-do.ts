@@ -63,6 +63,7 @@ export class SessionDO extends DurableObject<Env> {
       if (req.method === "POST" && sub === "control") return await this.control(req, roomId);
       if (req.method === "GET" && sub === "control") return await this.controlPoll(req, roomId);
       if (req.method === "GET" && sub === "roster") return await this.rosterEndpoint(req, roomId);
+      if (req.method === "POST" && sub === "take") return await this.take(req, roomId);
       return this.err("not_found", "unknown route", 404);
     } catch (e) {
       if (e instanceof HttpError) return this.err(e.code, e.message, e.status);
@@ -98,8 +99,9 @@ export class SessionDO extends DurableObject<Env> {
     } else if (existing.host_actor !== name) {
       this.ctx.storage.sql.exec("UPDATE session SET host_actor = ? WHERE id = ?", name, roomId);
     }
+    const epoch = this.getSession()?.writer_epoch ?? 0;
     const { token, claims } = await signToken(
-      { sid: roomId, role: "host", scope: "write", name, ttlSeconds: HOST_TOKEN_TTL },
+      { sid: roomId, role: "host", scope: "write", name, ttlSeconds: HOST_TOKEN_TTL, epoch },
       this.env.TOKEN_SIGNING_KEY,
     );
     this.upsertMember(claims.jti, name, "host", "write");
@@ -152,7 +154,7 @@ export class SessionDO extends DurableObject<Env> {
   /** POST /sessions/:id/events — host streams one or more (redacted) events. */
   private async postEvents(req: Request, roomId: string): Promise<Response> {
     const body = await req.json().catch(() => null);
-    await this.requireHost(req, roomId);
+    await this.requireWriter(req, roomId);
     const incoming = Array.isArray(body) ? body : [body];
     let lastSeq = 0;
     for (const raw of incoming) {
@@ -171,7 +173,7 @@ export class SessionDO extends DurableObject<Env> {
 
   /** GET /sessions/:id/steer/next — host dequeues the next steer to inject. */
   private async steerNext(req: Request, roomId: string): Promise<Response> {
-    await this.requireHost(req, roomId);
+    await this.requireWriter(req, roomId);
     const row = this.ctx.storage.sql
       .exec("SELECT * FROM steers WHERE status IN ('queued','approved') ORDER BY id LIMIT 1")
       .toArray()[0] as unknown as SteerRow | undefined;
@@ -188,7 +190,7 @@ export class SessionDO extends DurableObject<Env> {
       target?: string;
       scope?: string;
     };
-    await this.requireHost(req, roomId);
+    await this.requireWriter(req, roomId);
     switch (body.action) {
       case "pause":
         this.ctx.storage.sql.exec("UPDATE session SET paused = 1 WHERE id = ?", roomId);
@@ -233,6 +235,32 @@ export class SessionDO extends DurableObject<Env> {
         this.ctx.storage.sql.exec("UPDATE steers SET status = 'approved' WHERE status = 'suggested'");
         this.appendEvent("notification", "host", { text: "✅ host approved pending suggestions" });
         break;
+      case "handoff": {
+        const target = (body.target || "").trim();
+        if (!target) return this.err("bad_request", "handoff needs a target", 400);
+        const s = this.getSession();
+        const from = s ? s.host_actor || "host" : "host";
+        const newEpoch = (s ? s.writer_epoch : 0) + 1;
+        const bundle = this.buildBundle();
+        this.ctx.storage.sql.exec(
+          "UPDATE session SET writer_epoch = ?, host_actor = ? WHERE id = ?",
+          newEpoch,
+          target,
+          roomId,
+        );
+        this.ctx.storage.sql.exec(
+          "INSERT INTO handoffs (ts, from_actor, to_actor, bundle) VALUES (?, ?, ?, ?)",
+          Date.now(),
+          from,
+          target,
+          bundle,
+        );
+        this.appendEvent("handoff", "host", { from, to: target, epoch: newEpoch });
+        this.recordControl("handoff", { target, epoch: newEpoch });
+        this.broadcast({ type: "control", control: { action: "handoff", target, epoch: newEpoch } });
+        this.broadcastPresence();
+        break;
+      }
       default:
         return this.err("bad_action", "unknown control action", 400);
     }
@@ -258,6 +286,76 @@ export class SessionDO extends DurableObject<Env> {
   private async rosterEndpoint(req: Request, roomId: string): Promise<Response> {
     await this.requireHost(req, roomId);
     return this.json({ roster: this.roster() });
+  }
+
+  /**
+   * POST /sessions/:id/take — the teammate a handoff was directed to claims the
+   * writer role. Any valid token for this room authenticates; we only grant a
+   * host token to the name the handoff named, at the current writer epoch.
+   */
+  private async take(req: Request, roomId: string): Promise<Response> {
+    const body = (await req.json().catch(() => ({}))) as { name?: string; token?: string };
+    const auth = req.headers.get("Authorization") || "";
+    const token = (auth.startsWith("Bearer ") ? auth.slice(7) : "") || body.token || "";
+    let claims;
+    try {
+      claims = await verifyToken(token, this.env.TOKEN_SIGNING_KEY);
+    } catch {
+      throw new HttpError("unauthorized", "invalid token", 401);
+    }
+    if (claims.sid !== roomId) throw new HttpError("forbidden", "wrong session", 403);
+    const name = (body.name || claims.name).trim();
+    const s = this.getSession();
+    if (!s) throw new HttpError("no_session", "session not open", 404);
+    if ((s.host_actor || "") !== name) {
+      throw new HttpError("not_designated", `handoff was not directed to "${name}"`, 409);
+    }
+    const { token: hostToken, claims: hc } = await signToken(
+      { sid: roomId, role: "host", scope: "write", name, ttlSeconds: HOST_TOKEN_TTL, epoch: s.writer_epoch },
+      this.env.TOKEN_SIGNING_KEY,
+    );
+    this.upsertMember(hc.jti, name, "host", "write");
+    const last = this.ctx.storage.sql
+      .exec("SELECT bundle FROM handoffs ORDER BY id DESC LIMIT 1")
+      .toArray()[0] as unknown as { bundle: string } | undefined;
+    return this.json({ token: hostToken, epoch: s.writer_epoch, bundle: last ? last.bundle : "" });
+  }
+
+  /** Build a markdown handoff bundle from the canonical event log. */
+  private buildBundle(): string {
+    const events = this.ctx.storage.sql
+      .exec("SELECT * FROM events ORDER BY seq")
+      .toArray() as unknown as EventRow[];
+    const prompts: string[] = [];
+    const tools: string[] = [];
+    let lastAssistant = "";
+    let start: { cwd?: string; branch?: string; commit?: string } = {};
+    for (const e of events) {
+      const p = JSON.parse(e.payload);
+      if (e.kind === "session_start") start = p;
+      else if (e.kind === "prompt" && p.text) prompts.push(p.text);
+      else if (e.kind === "tool_call") tools.push(`${p.tool}: ${p.summary}`);
+      else if (e.kind === "assistant_text" && p.final && p.text) lastAssistant = p.text;
+    }
+    return [
+      "# Choir handoff context",
+      "",
+      "You are taking over a shared Claude Code session a teammate started. Continue their work from where they left off.",
+      "",
+      `**Working directory:** ${start.cwd || "(unknown)"}`,
+      `**Git:** ${start.branch || "?"} @ ${start.commit || "?"}`,
+      "",
+      "## Original request(s)",
+      ...(prompts.length ? prompts.slice(0, 10).map((t) => `- ${t}`) : ["- (none captured)"]),
+      "",
+      "## Recent activity",
+      ...(tools.length ? tools.slice(-15).map((t) => `- ${t}`) : ["- (no tools run yet)"]),
+      "",
+      "## Last thing the agent said",
+      lastAssistant || "(nothing yet)",
+      "",
+      `Make sure you're on branch \`${start.branch || "the shared branch"}\` with the latest code, then continue.`,
+    ].join("\n");
   }
 
   private recordControl(action: string, data: unknown): void {
@@ -511,6 +609,16 @@ export class SessionDO extends DurableObject<Env> {
       .exec("SELECT revoked FROM members WHERE jti = ?", claims.jti)
       .toArray()[0] as unknown as { revoked: number } | undefined;
     if (member?.revoked) throw new HttpError("revoked", "host revoked", 403);
+    return claims;
+  }
+
+  /** Like requireHost, but also enforces that this token is the CURRENT writer. */
+  private async requireWriter(req: Request, roomId: string) {
+    const claims = await this.requireHost(req, roomId);
+    const s = this.getSession();
+    if (s && claims.epoch !== s.writer_epoch) {
+      throw new HttpError("stale_writer", "you are no longer the session writer", 409);
+    }
     return claims;
   }
 

@@ -44,6 +44,8 @@ export interface SignInput {
   name: string;
   /** Lifetime in seconds from now. */
   ttlSeconds: number;
+  /** Writer epoch (0 for viewers / new hosts). */
+  epoch?: number;
   /** Optional fixed token id; a random UUID is used if omitted. */
   jti?: string;
 }
@@ -59,6 +61,7 @@ export async function signToken(
     role: input.role,
     scope: input.scope,
     name: input.name,
+    epoch: input.epoch ?? 0,
     iat: now,
     exp: now + input.ttlSeconds,
     jti: input.jti ?? crypto.randomUUID(),

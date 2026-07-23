@@ -1,0 +1,54 @@
+#!/usr/bin/env node
+"use strict";
+/**
+ * `/choir:take-handoff` — the receiving side of a handoff. Reads the pending
+ * handoff written by `npx choircode take`, points THIS Claude session at the
+ * same room as the new writer (so the hooks stream from here on), and prints the
+ * context bundle so it enters the model's context and it can continue the work.
+ */
+const fs = require("fs");
+const path = require("path");
+const { resolveDataDir, writeSessionCache } = require("../lib/config");
+
+function flag(name) {
+  const i = process.argv.indexOf(name);
+  return i >= 0 ? process.argv[i + 1] : undefined;
+}
+
+(async () => {
+  const sessionId = flag("--session") || process.env.CLAUDE_SESSION_ID;
+  const dataDir = resolveDataDir();
+  const pendingPath = path.join(dataDir, "pending-handoff.json");
+
+  let pending;
+  try {
+    pending = JSON.parse(fs.readFileSync(pendingPath, "utf8"));
+  } catch {
+    pending = null;
+  }
+  if (!pending || !pending.roomId || !pending.hostToken) {
+    console.log("Choir: no pending handoff found. Run `npx choircode take <code> --name <you>` first.");
+    process.exit(0);
+  }
+  if (!sessionId) {
+    console.log("Choir: couldn't determine the current session id (CLAUDE_SESSION_ID).");
+    process.exit(0);
+  }
+
+  // From now on, this session's hooks stream to the same room as the new writer.
+  writeSessionCache(dataDir, sessionId, {
+    roomId: pending.roomId,
+    relayUrl: pending.relayUrl,
+    hostToken: pending.hostToken,
+    name: pending.name,
+  });
+  try {
+    fs.unlinkSync(pendingPath);
+  } catch {
+    // best effort
+  }
+
+  console.log(pending.bundle || "(no context bundle was captured)");
+  console.log("\n---\n(You are now the Choir session driver; this session is streaming to your teammates. Continue the work above.)");
+  process.exit(0);
+})();

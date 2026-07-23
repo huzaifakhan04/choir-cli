@@ -96,6 +96,13 @@ export interface TokenClaims {
   scope: Scope;
   /** Display name of the holder. */
   name: string;
+  /**
+   * Writer epoch this token was minted at. The relay only accepts writes
+   * (events/steer-drain/control) from a host token whose epoch matches the
+   * session's current writer_epoch, so a handoff cleanly demotes the old host.
+   * Viewer tokens don't write, so this is 0 for them.
+   */
+  epoch: number;
   /** Issued-at (epoch seconds). */
   iat: number;
   /** Expiry (epoch seconds). */

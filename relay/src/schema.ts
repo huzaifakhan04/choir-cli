@@ -52,6 +52,14 @@ CREATE TABLE IF NOT EXISTS control_log (
   action TEXT NOT NULL,
   data   TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS handoffs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts         INTEGER NOT NULL,
+  from_actor TEXT,
+  to_actor   TEXT,
+  bundle     TEXT
+);
 `;
 
 export interface SessionRow {

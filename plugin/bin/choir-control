@@ -55,15 +55,29 @@ function flag(name) {
       if (!positional[0] || !positional[1]) return void console.log("Usage: /choir:scope <name> <view|suggest|write>");
       body = { action: "scope", target: positional[0], scope: positional[1] };
       break;
+    case "handoff":
+      if (!positional[0]) return void console.log("Usage: /choir:handoff <name>");
+      body = { action: "handoff", target: positional[0] };
+      break;
     default:
       return void console.log(`Choir: unknown control "${action}".`);
   }
 
   const res = await postJson(`${base}/control`, body, { token: cache.hostToken });
-  console.log(
-    res.ok
-      ? `Choir: ${action}${positional.length ? " " + positional.join(" ") : ""} ✓`
-      : `Choir: ${action} failed (status ${res.status}).`,
-  );
+  if (!res.ok) {
+    console.log(`Choir: ${action} failed (status ${res.status}).`);
+    process.exit(0);
+  }
+  if (action === "handoff") {
+    const who = positional[0];
+    console.log(
+      `Choir: handed off to ${who}. You're now a viewer.\n` +
+        `Tell ${who} to run, in their terminal:\n` +
+        `    npx choircode take <their join code> --name ${who}\n` +
+        `then start Claude Code and run /choir:take-handoff to pick up the context.`,
+    );
+  } else {
+    console.log(`Choir: ${action}${positional.length ? " " + positional.join(" ") : ""} ✓`);
+  }
   process.exit(0);
 })();
