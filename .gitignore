@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+build/
+*.tsbuildinfo
+
+# cloudflare / wrangler
+.wrangler/
+relay/.dev.vars
+
+# local config / secrets
+.env
+.env.*
+!.env.example
+**/.choir/
+choir.config.json
+
+# logs & os
+*.log
+.DS_Store
+
+# editor
+.idea/
+.vscode/
+*.swp
