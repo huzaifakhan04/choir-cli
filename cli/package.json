@@ -1,20 +1,37 @@
 {
   "name": "choir-cli",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Choir — join a live Claude Code session your team is sharing: watch and steer it from your terminal.",
   "license": "MIT",
   "author": "huzaifakhan04",
   "type": "commonjs",
-  "bin": { "choir": "bin/choir.js", "choir-cli": "bin/choir.js" },
-  "files": ["bin", "lib", "README.md"],
-  "engines": { "node": ">=18" },
+  "bin": {
+    "choir": "bin/choir.js",
+    "choir-cli": "bin/choir.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/huzaifakhan04/choir-cli.git"
   },
   "homepage": "https://github.com/huzaifakhan04/choir-cli#readme",
-  "bugs": { "url": "https://github.com/huzaifakhan04/choir-cli/issues" },
-  "keywords": ["claude", "claude-code", "multiplayer", "collaboration", "agent"],
+  "bugs": {
+    "url": "https://github.com/huzaifakhan04/choir-cli/issues"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "multiplayer",
+    "collaboration",
+    "agent"
+  ],
   "dependencies": {
     "picocolors": "^1.1.1",
     "ws": "^8.18.0"
