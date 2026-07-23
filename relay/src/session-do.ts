@@ -70,7 +70,12 @@ export class SessionDO extends DurableObject<Env> {
 
   /** POST /sessions/:id — host opens/attaches a room (gated by TEAM_KEY). */
   private async register(req: Request, roomId: string): Promise<Response> {
-    const body = (await req.json().catch(() => ({}))) as { name?: string };
+    const body = (await req.json().catch(() => ({}))) as {
+      name?: string;
+      cwd?: string;
+      branch?: string;
+      commit?: string;
+    };
     this.requireTeamKey(req);
     const name = (body.name || "host").slice(0, 64);
     const existing = this.getSession();
@@ -81,7 +86,11 @@ export class SessionDO extends DurableObject<Env> {
         name,
         Date.now(),
       );
-      this.appendEvent("session_start", name, {});
+      this.appendEvent("session_start", name, {
+        cwd: body.cwd || "",
+        branch: body.branch || "",
+        commit: body.commit || "",
+      });
     } else if (existing.host_actor !== name) {
       this.ctx.storage.sql.exec("UPDATE session SET host_actor = ? WHERE id = ?", name, roomId);
     }

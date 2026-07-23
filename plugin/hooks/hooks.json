@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" }] }
+    ],
+    "PreToolUse": [
+      { "matcher": "*", "hooks": [{ "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" }] }
+    ],
+    "PostToolUse": [
+      { "matcher": "*", "hooks": [{ "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" }] }
+    ],
+    "PostToolUseFailure": [
+      { "matcher": "*", "hooks": [{ "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" }] }
+    ],
+    "MessageDisplay": [
+      { "hooks": [{ "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" }] }
+    ],
+    "SessionEnd": [
+      { "hooks": [{ "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" }] }
+    ]
+  }
+}

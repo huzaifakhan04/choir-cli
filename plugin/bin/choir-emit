@@ -1,0 +1,49 @@
+#!/usr/bin/env node
+"use strict";
+/**
+ * Streaming hook. Runs (async, non-blocking) on UserPromptSubmit, Pre/PostToolUse,
+ * MessageDisplay, Stop, and SessionEnd. Reads the hook payload on stdin, and if
+ * THIS session has been shared (a cache entry exists), maps it to a Choir event,
+ * redacts it on-host, and POSTs it to the relay. If the session isn't shared, it
+ * exits immediately and touches the network for nothing.
+ */
+const { mapHookToEvent } = require("../lib/mapping");
+const { redactEvent } = require("../lib/redact");
+const { resolveDataDir, readSessionCache } = require("../lib/config");
+const { postJson } = require("../lib/relay");
+
+function readStdin() {
+  return new Promise((resolve) => {
+    let d = "";
+    process.stdin.on("data", (c) => (d += c));
+    process.stdin.on("end", () => resolve(d));
+    process.stdin.resume();
+  });
+}
+
+(async () => {
+  let input;
+  try {
+    input = JSON.parse(await readStdin());
+  } catch {
+    process.exit(0);
+  }
+  const sessionId = input && input.session_id;
+  if (!sessionId) process.exit(0);
+
+  const cache = readSessionCache(resolveDataDir(), sessionId);
+  if (!cache || !cache.roomId || !cache.relayUrl || !cache.hostToken) {
+    process.exit(0); // this session hasn't been shared — do nothing
+  }
+
+  const mapped = mapHookToEvent(input, cache.name);
+  if (!mapped) process.exit(0);
+
+  const payload = redactEvent(mapped.kind, mapped.payload);
+  await postJson(
+    `${cache.relayUrl}/sessions/${cache.roomId}/events`,
+    { kind: mapped.kind, actor: mapped.actor, payload },
+    { token: cache.hostToken, timeoutMs: 2500 },
+  );
+  process.exit(0);
+})();

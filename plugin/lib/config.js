@@ -42,7 +42,14 @@ function loadConfig(env) {
   return resolveConfig(env || process.env, readConfigFile());
 }
 
-// ---- per-session token cache (${CLAUDE_PLUGIN_DATA}/sessions/<id>.json) -----
+// ---- per-session token cache -----------------------------------------------
+// A fixed, stable data dir (~/.choir) that both the share command and the hook
+// scripts resolve identically, independent of plugin template-var substitution.
+
+function resolveDataDir(env) {
+  env = env || process.env;
+  return env.CHOIR_DATA_DIR || path.join(os.homedir(), ".choir");
+}
 
 function sessionCacheFile(dataDir, sessionId) {
   return path.join(dataDir, "sessions", `${sessionId}.json`);
@@ -67,6 +74,7 @@ module.exports = {
   loadConfig,
   configFilePath,
   readConfigFile,
+  resolveDataDir,
   sessionCacheFile,
   readSessionCache,
   writeSessionCache,
