@@ -27,9 +27,15 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
-      - name: Publish choir-cli
+      - name: Publish choir-cli (skips if the version already exists)
         if: env.NPM_TOKEN != ''
-        run: npm publish ./cli --access public
+        run: |
+          VERSION=$(node -p "require('./cli/package.json').version")
+          if npm view "choir-cli@$VERSION" version >/dev/null 2>&1; then
+            echo "choir-cli@$VERSION is already on npm — nothing to publish."
+          else
+            npm publish ./cli --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Warn if NPM_TOKEN is missing
@@ -49,10 +55,15 @@ jobs:
           node-version: 22
           registry-url: https://npm.pkg.github.com
           scope: "@huzaifakhan04"
-      - name: Publish scoped mirror (@huzaifakhan04/choir-cli)
+      - name: Publish scoped mirror (skips if the version already exists)
         working-directory: cli
         run: |
           npm pkg set name=@huzaifakhan04/choir-cli
-          npm publish
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "@huzaifakhan04/choir-cli@$VERSION" version >/dev/null 2>&1; then
+            echo "@huzaifakhan04/choir-cli@$VERSION is already on GitHub Packages — nothing to publish."
+          else
+            npm publish
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
