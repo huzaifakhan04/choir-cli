@@ -1,0 +1,52 @@
+name: 🐛 Bug report
+description: Report something in Choir that isn't working
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug! Please **don't report security issues here** — use our [Security Policy](https://github.com/huzaifakhan04/choir-cli/security/policy) instead.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Which part of Choir?
+      options:
+        - Plugin (host / Claude Code)
+        - Relay (Cloudflare)
+        - CLI (choir / choir-cli)
+        - Docs
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run '...'
+        2. Then '...'
+        3. See '...'
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      placeholder: "Claude Code 2.1.x · choir plugin 0.2.x · choir-cli 0.2.x · Node 20"
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste any relevant output. Please redact secrets.
+      render: shell
+    validations:
+      required: false

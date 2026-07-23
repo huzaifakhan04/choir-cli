@@ -1,6 +1,6 @@
 {
   "name": "choir-cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Choir — join a live Claude Code session your team is sharing: watch and steer it from your terminal.",
   "license": "MIT",
   "author": "huzaifakhan04",
@@ -12,6 +12,8 @@
     "type": "git",
     "url": "git+https://github.com/huzaifakhan04/choir-cli.git"
   },
+  "homepage": "https://github.com/huzaifakhan04/choir-cli#readme",
+  "bugs": { "url": "https://github.com/huzaifakhan04/choir-cli/issues" },
   "keywords": ["claude", "claude-code", "multiplayer", "collaboration", "agent"],
   "dependencies": {
     "picocolors": "^1.1.1",

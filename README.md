@@ -10,6 +10,7 @@ Your AI coding agent is the most powerful tool on your team. Choir makes it the 
 
 <br/>
 
+[![CI](https://github.com/huzaifakhan04/choir-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/huzaifakhan04/choir-cli/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/choir-cli?color=cb3837&logo=npm&label=choir-cli)](https://www.npmjs.com/package/choir-cli)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3da638.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%E2%89%A518-5FA04E?logo=node.js&logoColor=white)](https://nodejs.org)

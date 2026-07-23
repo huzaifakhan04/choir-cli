@@ -1,0 +1,28 @@
+name: 🔌 Host adapter proposal
+description: Propose (or offer to build) Choir support for another agent — Codex, Cursor, Aider, …
+labels: ["host-adapter", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Choir's relay and CLI are agent-agnostic — supporting a new agent means writing a thin **host adapter**. See [CONTRIBUTING.md → Adding a host adapter](https://github.com/huzaifakhan04/choir-cli/blob/main/CONTRIBUTING.md#adding-a-host-adapter).
+  - type: input
+    id: tool
+    attributes:
+      label: Which agent / tool?
+      placeholder: "OpenAI Codex, Cursor, Aider, Gemini CLI, …"
+    validations:
+      required: true
+  - type: textarea
+    id: events
+    attributes:
+      label: How does it expose session activity?
+      description: Does it have hooks, events, or a plugin API you can observe (prompts, tool calls, replies) and inject steers into?
+    validations:
+      required: false
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd like to help build this adapter

@@ -1,0 +1,58 @@
+name: Publish
+
+# Publishes the CLI when you cut a GitHub Release (or run it manually).
+# - npmjs.org  → the public `choir-cli` package everyone installs (needs the NPM_TOKEN secret)
+# - GitHub Packages → a scoped mirror `@huzaifakhan04/choir-cli` that populates
+#   this repo's "Packages" sidebar and updates on every release (uses the built-in GITHUB_TOKEN)
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  npm:
+    name: Publish to npmjs.org
+    runs-on: ubuntu-latest
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - name: Publish choir-cli
+        if: env.NPM_TOKEN != ''
+        run: npm publish ./cli --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Warn if NPM_TOKEN is missing
+        if: env.NPM_TOKEN == ''
+        run: echo "::warning::NPM_TOKEN secret not set — skipped the npmjs publish. Add it under Settings → Secrets and variables → Actions."
+
+  github-packages:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          scope: "@huzaifakhan04"
+      - name: Publish scoped mirror (@huzaifakhan04/choir-cli)
+        working-directory: cli
+        run: |
+          npm pkg set name=@huzaifakhan04/choir-cli
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
