@@ -10,7 +10,7 @@ import type {
 } from "@choir/protocol";
 import { decodeFrame, encodeFrame } from "@choir/protocol";
 import type { Env } from "./env";
-import { SCHEMA, type EventRow, type InviteRow, type SessionRow } from "./schema";
+import { SCHEMA, type EventRow, type InviteRow, type SessionRow, type SteerRow } from "./schema";
 import { signToken, verifyToken } from "./token";
 
 /** Per-socket state carried across hibernation. */
@@ -59,6 +59,9 @@ export class SessionDO extends DurableObject<Env> {
       if (req.method === "POST" && sub === "invites") return await this.createInvite(req, roomId);
       if (req.method === "POST" && sub === "redeem") return await this.redeem(req, roomId);
       if (req.method === "POST" && sub === "events") return await this.postEvents(req, roomId);
+      if (req.method === "GET" && sub === "steer/next") return await this.steerNext(req, roomId);
+      if (req.method === "POST" && sub === "control") return await this.control(req, roomId);
+      if (req.method === "GET" && sub === "control") return await this.controlPoll(req, roomId);
       return this.err("not_found", "unknown route", 404);
     } catch (e) {
       if (e instanceof HttpError) return this.err(e.code, e.message, e.status);
@@ -165,6 +168,123 @@ export class SessionDO extends DurableObject<Env> {
     return this.json({ ok: true, seq: lastSeq });
   }
 
+  /** GET /sessions/:id/steer/next — host dequeues the next steer to inject. */
+  private async steerNext(req: Request, roomId: string): Promise<Response> {
+    await this.requireHost(req, roomId);
+    const row = this.ctx.storage.sql
+      .exec("SELECT * FROM steers WHERE status IN ('queued','approved') ORDER BY id LIMIT 1")
+      .toArray()[0] as unknown as SteerRow | undefined;
+    if (!row) return this.json({ steer: null });
+    this.ctx.storage.sql.exec("UPDATE steers SET status = 'injected' WHERE id = ?", row.id);
+    this.appendEvent("steer_injected", row.actor, { text: row.text, from: row.actor });
+    return this.json({ steer: { text: row.text, from: row.actor } });
+  }
+
+  /** POST /sessions/:id/control — host pause/resume/kick/scope/approve. */
+  private async control(req: Request, roomId: string): Promise<Response> {
+    const body = (await req.json().catch(() => ({}))) as {
+      action?: string;
+      target?: string;
+      scope?: string;
+    };
+    await this.requireHost(req, roomId);
+    switch (body.action) {
+      case "pause":
+        this.ctx.storage.sql.exec("UPDATE session SET paused = 1 WHERE id = ?", roomId);
+        this.appendEvent("notification", "host", { text: "⏸ session paused by host" });
+        this.recordControl("pause", {});
+        this.broadcast({ type: "control", control: { action: "pause" } });
+        break;
+      case "resume":
+        this.ctx.storage.sql.exec("UPDATE session SET paused = 0 WHERE id = ?", roomId);
+        this.appendEvent("notification", "host", { text: "▶ session resumed by host" });
+        this.recordControl("resume", {});
+        this.broadcast({ type: "control", control: { action: "resume" } });
+        break;
+      case "kick": {
+        const target = (body.target || "").trim();
+        if (!target) return this.err("bad_request", "kick needs a target", 400);
+        this.ctx.storage.sql.exec(
+          "UPDATE members SET revoked = 1 WHERE name = ? AND role = 'viewer'",
+          target,
+        );
+        this.closeSocketsFor(target);
+        this.appendEvent("notification", "host", { text: `👋 ${target} was removed` });
+        this.recordControl("kick", { target });
+        this.broadcastPresence();
+        break;
+      }
+      case "scope": {
+        const target = (body.target || "").trim();
+        const scope =
+          body.scope === "view" || body.scope === "suggest" || body.scope === "write"
+            ? (body.scope as Scope)
+            : null;
+        if (!target || !scope) return this.err("bad_request", "scope needs target + scope", 400);
+        this.ctx.storage.sql.exec("UPDATE members SET scope = ? WHERE name = ?", scope, target);
+        this.updateSocketScope(target, scope);
+        this.appendEvent("notification", "host", { text: `🔑 ${target} scope → ${scope}` });
+        this.recordControl("scope", { target, scope });
+        this.broadcastPresence();
+        break;
+      }
+      case "approve":
+        this.ctx.storage.sql.exec("UPDATE steers SET status = 'approved' WHERE status = 'suggested'");
+        this.appendEvent("notification", "host", { text: "✅ host approved pending suggestions" });
+        break;
+      default:
+        return this.err("bad_action", "unknown control action", 400);
+    }
+    return this.json({ ok: true });
+  }
+
+  /** GET /sessions/:id/control?since= — host/monitor polls pause + control feed. */
+  private async controlPoll(req: Request, roomId: string): Promise<Response> {
+    await this.requireHost(req, roomId);
+    const since = Number(new URL(req.url).searchParams.get("since") || "0");
+    const rows = this.ctx.storage.sql
+      .exec("SELECT * FROM control_log WHERE seq > ? ORDER BY seq", since)
+      .toArray() as unknown as Array<{ seq: number; action: string; data: string }>;
+    const s = this.getSession();
+    return this.json({
+      paused: !!(s && s.paused),
+      writerEpoch: s ? s.writer_epoch : 0,
+      controls: rows.map((r) => ({ seq: r.seq, action: r.action, data: JSON.parse(r.data) })),
+    });
+  }
+
+  private recordControl(action: string, data: unknown): void {
+    this.ctx.storage.sql.exec(
+      "INSERT INTO control_log (ts, action, data) VALUES (?, ?, ?)",
+      Date.now(),
+      action,
+      JSON.stringify(data),
+    );
+  }
+
+  private closeSocketsFor(name: string): void {
+    for (const ws of this.ctx.getWebSockets()) {
+      const att = ws.deserializeAttachment() as Att | null;
+      if (att && att.name === name && att.role === "viewer") {
+        try {
+          ws.send(encodeFrame({ type: "error", code: "kicked", message: "removed by host" }));
+          ws.close(1008, "kicked");
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }
+
+  private updateSocketScope(name: string, scope: Scope): void {
+    for (const ws of this.ctx.getWebSockets()) {
+      const att = ws.deserializeAttachment() as Att | null;
+      if (att && att.name === name && att.role === "viewer") {
+        ws.serializeAttachment({ ...att, scope });
+      }
+    }
+  }
+
   // ---- WebSocket (viewers) --------------------------------------------------
 
   private handleUpgrade(): Response {
@@ -191,8 +311,33 @@ export class SessionDO extends DurableObject<Env> {
     if (!att || !att.ready) return;
     if (frame.type === "presence") {
       ws.send(encodeFrame({ type: "presence", roster: this.roster() }));
+      return;
     }
-    // steer handling arrives with the redirect phase.
+    if (frame.type === "steer") {
+      this.onSteer(ws, att, frame.text);
+    }
+  }
+
+  /** A viewer submitted a steer. Enqueue it (write) or record a suggestion. */
+  private onSteer(ws: WebSocket, att: Att, text: string): void {
+    const clean = String(text || "").slice(0, 2000).trim();
+    if (!clean) return;
+    if (att.scope === "view") {
+      ws.send(encodeFrame({ type: "error", code: "read_only", message: "your scope is view-only" }));
+      return;
+    }
+    const status = att.scope === "write" ? "queued" : "suggested";
+    this.ctx.storage.sql.exec(
+      "INSERT INTO steers (ts, actor, text, scope, status) VALUES (?, ?, ?, ?, ?)",
+      Date.now(),
+      att.name,
+      clean,
+      att.scope,
+      status,
+    );
+    if (att.scope === "suggest") {
+      this.appendEvent("notification", att.name, { text: `💡 ${att.name} suggests: ${clean}` });
+    }
   }
 
   async webSocketClose(ws: WebSocket): Promise<void> {

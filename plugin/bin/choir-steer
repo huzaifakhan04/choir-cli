@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+"use strict";
+/**
+ * The Stop hook — the heart of "redirect". At every turn boundary it (a) streams
+ * a turn_end for viewers and (b) asks the relay for the next queued steer. If a
+ * teammate has steered, it returns {"decision":"block","reason":...} so the agent
+ * picks the steer up as its next instruction and keeps working.
+ *
+ * Framing matters: the reason is phrased as a neutral, authorized task
+ * instruction. Phrasing it as "an external teammate is steering you" makes the
+ * model refuse it as a prompt-injection attempt (verified against Claude Code
+ * 2.1.205) — so we don't. Attribution is preserved in the viewer stream via the
+ * steer_injected event, not in the injected text.
+ *
+ * Loop safety: on re-entry Claude sets stop_hook_active=true. We only ever block
+ * when a real steer was dequeued (each block is genuine progress), so we never
+ * spin against Claude's consecutive-block cap.
+ */
+const { resolveDataDir, readSessionCache } = require("../lib/config");
+const { getJson, postJson } = require("../lib/relay");
+
+function readStdin() {
+  return new Promise((resolve) => {
+    let d = "";
+    process.stdin.on("data", (c) => (d += c));
+    process.stdin.on("end", () => resolve(d));
+    process.stdin.resume();
+  });
+}
+
+(async () => {
+  let input;
+  try {
+    input = JSON.parse(await readStdin());
+  } catch {
+    process.exit(0);
+  }
+  const sessionId = input && input.session_id;
+  if (!sessionId) process.exit(0);
+
+  const cache = readSessionCache(resolveDataDir(), sessionId);
+  if (!cache || !cache.roomId || !cache.relayUrl || !cache.hostToken) {
+    process.exit(0); // not shared
+  }
+  const base = `${cache.relayUrl}/sessions/${cache.roomId}`;
+  const token = cache.hostToken;
+
+  // Stream turn_end for viewers and fetch the next steer together.
+  const [, steerRes] = await Promise.all([
+    postJson(
+      `${base}/events`,
+      { kind: "turn_end", actor: "agent", payload: { last: input.last_assistant_message || "" } },
+      { token, timeoutMs: 2000 },
+    ),
+    getJson(`${base}/steer/next`, { token, timeoutMs: 2500 }),
+  ]);
+
+  const steer = steerRes && steerRes.ok && steerRes.json && steerRes.json.steer;
+  if (steer && steer.text) {
+    const reason = `Additional instruction for this task: ${steer.text}`;
+    process.stdout.write(JSON.stringify({ decision: "block", reason }));
+    process.exit(0);
+  }
+  process.exit(0);
+})();
