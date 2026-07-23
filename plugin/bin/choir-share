@@ -10,6 +10,7 @@ const crypto = require("crypto");
 const { execSync } = require("child_process");
 const { loadConfig, resolveDataDir, readSessionCache, writeSessionCache } = require("../lib/config");
 const { postJson } = require("../lib/relay");
+const { encodeConnect } = require("../lib/connect");
 
 function arg(flag) {
   const i = process.argv.indexOf(flag);
@@ -84,9 +85,10 @@ function positionalScope() {
     process.exit(0);
   }
 
+  const connect = encodeConnect(cfg.relayUrl, inv.json.code);
   console.log(
-    `\n🎶 Choir is live for this session. Teammates can join with:\n\n` +
-      `    npx choircode join ${inv.json.code}\n\n` +
+    `\n🎶 Choir is live for this session. Teammates can join with one command — no setup:\n\n` +
+      `    npx choircode join ${connect}\n\n` +
       `Scope: ${scope}  (view = watch · suggest = propose steers · write = steer directly)\n` +
       `Relay: ${cfg.relayUrl}\n`,
   );

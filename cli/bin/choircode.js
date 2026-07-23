@@ -12,6 +12,7 @@ const readline = require("readline");
 const pc = require("picocolors");
 const WebSocket = require("ws");
 const { createRenderer } = require("../lib/render");
+const { decodeConnect } = require("../lib/connect");
 
 function configFilePath() {
   return path.join(os.homedir(), ".config", "choir", "config.json");
@@ -46,6 +47,20 @@ function resolveName() {
     (os.userInfo().username || "guest")
   );
 }
+// Resolve a join argument to {relay, roomId, inviteId}. Supports the v0.2
+// self-contained connect token (relay embedded) and the bare v0.1 code
+// (relay comes from --relay / config).
+function resolveTarget(codeArg) {
+  const parsed = decodeConnect(codeArg);
+  if (parsed) return { relay: parsed.relay, roomId: parsed.roomId, inviteId: parsed.inviteId };
+  const dash = codeArg.indexOf("-");
+  return {
+    relay: resolveRelay(),
+    roomId: dash >= 0 ? codeArg.slice(0, dash) : codeArg,
+    inviteId: dash >= 0 ? codeArg.slice(dash + 1) : "",
+  };
+}
+
 async function postJson(url, body) {
   const res = await fetch(url, {
     method: "POST",
@@ -63,8 +78,9 @@ Usage:
   npx choircode config --relay <url> [--team-key <key>] [--name <you>]
   npx choircode help
 
-The <code> is what the host's /choir:share prints (e.g. znx2fusf-zbxd).
-Set the relay once with \`config\`, or pass --relay each time.`);
+The <code> is what the host's /choir:share prints — it's self-contained
+(the relay is baked in), so nothing else is needed to join. A short
+roomId-inviteId code also works once you've set --relay or run \`config\`.`);
 }
 
 function cmdConfig() {
@@ -84,14 +100,11 @@ async function cmdJoin(code) {
     console.error("Missing join code. Usage: npx choircode join <code>");
     process.exit(1);
   }
-  const relay = resolveRelay();
+  const { relay, roomId, inviteId } = resolveTarget(code);
   if (!relay) {
-    console.error("No relay set. Pass --relay <url> or run: npx choircode config --relay <url>");
+    console.error("No relay set. Use the full join code from /choir:share, or pass --relay <url>.");
     process.exit(1);
   }
-  const dash = code.indexOf("-");
-  const roomId = dash >= 0 ? code.slice(0, dash) : code;
-  const inviteId = dash >= 0 ? code.slice(dash + 1) : "";
   const name = resolveName();
 
   const red = await postJson(`${relay}/sessions/${roomId}/redeem`, { inviteId, name });
@@ -166,14 +179,11 @@ async function cmdTake(code) {
     console.error("Missing join code. Usage: npx choircode take <code> --name <you>");
     process.exit(1);
   }
-  const relay = resolveRelay();
+  const { relay, roomId, inviteId } = resolveTarget(code);
   if (!relay) {
-    console.error("No relay set. Pass --relay <url> or run: npx choircode config --relay <url>");
+    console.error("No relay set. Use the full join code from /choir:share, or pass --relay <url>.");
     process.exit(1);
   }
-  const dash = code.indexOf("-");
-  const roomId = dash >= 0 ? code.slice(0, dash) : code;
-  const inviteId = dash >= 0 ? code.slice(dash + 1) : "";
   const name = resolveName();
 
   const red = await postJson(`${relay}/sessions/${roomId}/redeem`, { inviteId, name });

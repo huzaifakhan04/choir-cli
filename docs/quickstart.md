@@ -53,21 +53,24 @@ In any Claude Code session, run:
 It prints a join code:
 
 ```
-🎶 Choir is live for this session. Teammates can join with:
+🎶 Choir is live for this session. Teammates can join with one command — no setup:
 
-    npx choircode join znx2fusf-zbxd
+    npx choircode join choir1_aHR0cHM6Ly9jaG9pci1yZWxheS4uLg
 ```
 
 Drop that line in your team chat. Nothing is streamed until you share — before that, the hooks stay silent.
 
 ## 4. Join (viewers)
 
+The join code `/choir:share` prints is **self-contained** — the relay is baked in, so teammates need nothing configured:
+
 ```bash
-npx choircode config --relay https://choir-relay.<you>.workers.dev --name Bob   # once
-npx choircode join znx2fusf-zbxd
+npx choircode join choir1_aHR0cHM6Ly9jaG9pci1yZWxheS4uLg    # exactly what the host pasted
 ```
 
-Bob replays the session so far, then watches it live. With a `suggest`/`write` code, Bob can type a line and press Enter to steer.
+Bob replays the session so far, then watches it live. With a `suggest`/`write` code, Bob types a line and presses Enter to steer.
+
+> Prefer to preconfigure the relay for your team? `npx choircode config --relay <url>` also works, and then the short `roomId-inviteId` form is enough.
 
 ## What each person needs
 
