@@ -7,7 +7,7 @@ Choir makes one live Claude Code session something your whole team can watch, st
 The relay is a single Cloudflare Worker + Durable Object. It runs on Cloudflare's free plan and there is nothing to babysit — outbound fan-out to viewers is free.
 
 ```bash
-git clone https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26 choir
+git clone https://github.com/huzaifakhan04/choir-cli choir
 cd choir/relay
 npm i -g wrangler          # or: npx wrangler
 
@@ -26,7 +26,7 @@ The host keeps using Claude Code normally — Choir just adds hooks and the `/ch
 
 ```bash
 # in Claude Code:
-/plugin marketplace add huzaifakhan04/multiplayer-ai-yc-rfs-f26
+/plugin marketplace add huzaifakhan04/choir-cli
 /plugin install choir@choir
 ```
 

@@ -1,15 +1,15 @@
 # choir (Claude Code plugin)
 
-The host side of **[Choir](https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26)** — multiplayer for Claude Code. Install this plugin, keep using Claude Code normally, and share any session so teammates can watch, steer, and take it over.
+The host side of **[Choir](https://github.com/huzaifakhan04/choir-cli)** — multiplayer for Claude Code. Install this plugin, keep using Claude Code normally, and share any session so teammates can watch, steer, and take it over.
 
 ## Install
 
 ```
-/plugin marketplace add huzaifakhan04/multiplayer-ai-yc-rfs-f26
+/plugin marketplace add huzaifakhan04/choir-cli
 /plugin install choir@choir
 ```
 
-Then configure the relay once (see the [quickstart](https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26/blob/main/docs/quickstart.md)):
+Then configure the relay once (see the [quickstart](https://github.com/huzaifakhan04/choir-cli/blob/main/docs/quickstart.md)):
 
 ```bash
 export CHOIR_RELAY_URL="https://choir-relay.<you>.workers.dev"
@@ -32,7 +32,7 @@ export CHOIR_NAME="Alice"
 
 ## How it works
 
-Hooks stream the session to a Cloudflare relay (secrets are redacted **on your machine** first), and a `Stop` hook injects teammates' steers at turn boundaries. Nothing streams until you `/choir:share`. Your Claude API key never leaves your machine. See [architecture](https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26/blob/main/docs/architecture.md) and [security](https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26/blob/main/docs/security.md).
+Hooks stream the session to a Cloudflare relay (secrets are redacted **on your machine** first), and a `Stop` hook injects teammates' steers at turn boundaries. Nothing streams until you `/choir:share`. Your Claude API key never leaves your machine. See [architecture](https://github.com/huzaifakhan04/choir-cli/blob/main/docs/architecture.md) and [security](https://github.com/huzaifakhan04/choir-cli/blob/main/docs/security.md).
 
 Requires Node 18+ on the host (for the hook scripts and `git`).
 

@@ -1,6 +1,6 @@
 # choir-cli
 
-The terminal client for **[Choir](https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26)** — multiplayer for Claude Code. Join a teammate's live Claude Code session, watch it work, and steer it, all from your terminal.
+The terminal client for **[Choir](https://github.com/huzaifakhan04/choir-cli)** — multiplayer for Claude Code. Join a teammate's live Claude Code session, watch it work, and steer it, all from your terminal.
 
 ```bash
 # one-time: point at your team's relay
@@ -30,6 +30,6 @@ Flags: `--relay <url>`, `--name <you>` (also read from `CHOIR_RELAY_URL` / `CHOI
 - `/who` — show who's connected
 - `/quit` — leave
 
-Node 18+. The host side is the `choir` Claude Code plugin — see the [main repo](https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26).
+Node 18+. The host side is the `choir` Claude Code plugin — see the [main repo](https://github.com/huzaifakhan04/choir-cli).
 
 MIT © huzaifakhan04

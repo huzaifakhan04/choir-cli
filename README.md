@@ -15,7 +15,8 @@ Your AI coding agent is the most powerful tool on your team. Choir makes it the 
 [![Node.js](https://img.shields.io/badge/node-%E2%89%A518-5FA04E?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A5CF6)](https://docs.claude.com/en/docs/claude-code)
 [![Cost](https://img.shields.io/badge/cost%20to%20run-%240-3da638.svg)](#-configuration)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-8A5CF6.svg)](#-contributing)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-8A5CF6.svg)](CONTRIBUTING.md)
+[![Code of Conduct](https://img.shields.io/badge/Code%20of%20Conduct-v2.1-8A5CF6.svg)](CODE_OF_CONDUCT.md)
 
 </div>
 
@@ -115,7 +116,7 @@ Everyone uses their **own** Claude auth. For the full design, see [`docs/archite
 The relay is a single Cloudflare Worker + Durable Object. It runs on the free plan and there's nothing to babysit.
 
 ```bash
-git clone https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26 choir
+git clone https://github.com/huzaifakhan04/choir-cli choir
 cd choir/relay
 
 npx wrangler login          # opens a browser to authorize Cloudflare
@@ -136,7 +137,7 @@ echo "your-team-password"      | npx wrangler secret put TEAM_KEY
 In Claude Code:
 
 ```text
-/plugin marketplace add huzaifakhan04/multiplayer-ai-yc-rfs-f26
+/plugin marketplace add huzaifakhan04/choir-cli
 /plugin install choir@choir
 ```
 
@@ -273,13 +274,15 @@ The good news: the **relay** and the **`choir-cli` client are agent-agnostic** �
 - [ ] Session recording & searchable history
 - [ ] Idle-session wake (steer an agent even when it's sitting idle)
 
-Want Choir on your tool of choice? [Open an issue](https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26/issues) or contribute an adapter — see below.
+Want Choir on your tool of choice? [Open an issue](https://github.com/huzaifakhan04/choir-cli/issues) or contribute an adapter — see below.
 
 ---
 
 ## 🤝 Contributing
 
 Contributions are welcome and appreciated — bug reports, docs, tests, and especially new host adapters.
+
+> 📋 Read the full **[Contributing guide](CONTRIBUTING.md)** to get started, and please follow our **[Code of Conduct](CODE_OF_CONDUCT.md)**. Found a vulnerability? See the **[Security Policy](SECURITY.md)**.
 
 **Project layout**
 
@@ -294,8 +297,8 @@ Contributions are welcome and appreciated — bug reports, docs, tests, and espe
 **Develop locally**
 
 ```bash
-git clone https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26
-cd multiplayer-ai-yc-rfs-f26
+git clone https://github.com/huzaifakhan04/choir-cli
+cd choir-cli
 pnpm install
 
 pnpm test                                        # run the unit suite
@@ -311,8 +314,8 @@ claude --plugin-dir ./plugin                      # try the plugin without insta
 
 Thanks to everyone who helps make Choir better. This list updates automatically as people contribute.
 
-<a href="https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=huzaifakhan04/multiplayer-ai-yc-rfs-f26" alt="Contributors" />
+<a href="https://github.com/huzaifakhan04/choir-cli/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=huzaifakhan04/choir-cli" alt="Contributors" />
 </a>
 
 *Made something better? Send a PR and your avatar shows up here.*
@@ -332,7 +335,7 @@ Copyright © 2026 [huzaifakhan04](https://github.com/huzaifakhan04) and contribu
 <div align="center">
 <br/>
 
-**If Choir is useful to you, consider [starring the repo](https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26) ⭐**
+**If Choir is useful to you, consider [starring the repo](https://github.com/huzaifakhan04/choir-cli) ⭐**
 
 *Built for teams who'd rather not work alone.*
 

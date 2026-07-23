@@ -15,7 +15,7 @@
       "description": "Watch, redirect, and hand off one live Claude Code session as a team. Streams the session to a Cloudflare relay; teammates join from their terminal with `npx choir-cli join`.",
       "version": "0.2.1",
       "author": { "name": "huzaifakhan04" },
-      "homepage": "https://github.com/huzaifakhan04/multiplayer-ai-yc-rfs-f26",
+      "homepage": "https://github.com/huzaifakhan04/choir-cli",
       "license": "MIT",
       "keywords": ["multiplayer", "collaboration", "agent", "team", "realtime"]
     }
