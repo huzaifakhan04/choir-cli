@@ -1,6 +1,6 @@
 ---
 name: scope
-description: Change a teammate's permission in the shared session. Usage: /choir:scope <name> <view|suggest|write>.
+description: "Change a teammate's permission in the shared session (usage: /choir:scope <name> view|suggest|write)."
 disable-model-invocation: true
 allowed-tools: Bash(node:*)
 ---

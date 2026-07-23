@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Hand the driver's seat to a teammate. Usage: /choir:handoff <name>. They continue the session on their machine with the shared context; you become a viewer.
+description: "Hand the driver's seat to a teammate (usage: /choir:handoff <name>). They continue the session on their machine with the shared context; you become a viewer."
 disable-model-invocation: true
 allowed-tools: Bash(node:*)
 ---
