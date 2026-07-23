@@ -46,9 +46,9 @@ Early, built in the open. Phased roadmap:
 - [x] **Phase 1** — Watch: stream a live session, replay history + tail live from the terminal
 - [x] **Phase 2** — Redirect: teammates steer a running session; host controls (pause/kick/scope/roster)
 - [x] **Phase 3** — Handoff: transfer the driver's seat cross-machine with the shared context
-- [ ] **Phase 4** — Distribution polish (marketplace ✓, npm publish, `npx skills add`)
+- [x] **Phase 4** — Distribution: plugin on the marketplace + [`choircode`](https://www.npmjs.com/package/choircode) on npm
 
-Phases 1–3 are verified end-to-end against real Claude Code 2.1.205 + a real Cloudflare `workerd` runtime.
+All phases are verified end-to-end against real Claude Code 2.1.205 and a live Cloudflare relay.
 
 ## Commands
 
