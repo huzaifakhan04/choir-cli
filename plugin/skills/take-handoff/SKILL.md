@@ -1,6 +1,6 @@
 ---
 name: take-handoff
-description: Pick up a Claude Code session a teammate handed off to you — load the shared context and become the session's driver. Run after `npx choircode take`.
+description: Pick up a Claude Code session a teammate handed off to you — load the shared context and become the session's driver. Run after `npx choir-cli take`.
 disable-model-invocation: true
 allowed-tools: Bash(node:*)
 ---

@@ -3,7 +3,7 @@
 Choir turns one local Claude Code session into something a team shares, without changing how the host works. Three parts:
 
 ```
- HOST (native `claude` + Choir plugin)        RELAY (Cloudflare Worker + DO)        VIEWERS (npx choircode)
+ HOST (native `claude` + Choir plugin)        RELAY (Cloudflare Worker + DO)        VIEWERS (npx choir-cli)
  ┌───────────────────────────────────┐        ┌──────────────────────────────┐     ┌───────────────────────┐
  │ hooks:                            │  HTTP  │  one Durable Object / session │     │  WebSocket             │
  │  UserPromptSubmit ┐               │ ─────▶ │  • append-only event log      │◀─WS─▶│  replay history        │
@@ -41,7 +41,7 @@ The worker is a thin router: it maps `/sessions/:id/*` to that session's Durable
 
 ## The viewer (CLI)
 
-`npx choircode join <code>` redeems an invite for a viewer token, opens the WebSocket, replays history, then tails live — rendering prompts, tool calls/results, coalesced assistant text, notifications, and presence. With `suggest`/`write` scope, typed lines become steers.
+`npx choir-cli join <code>` redeems an invite for a viewer token, opens the WebSocket, replays history, then tails live — rendering prompts, tool calls/results, coalesced assistant text, notifications, and presence. With `suggest`/`write` scope, typed lines become steers.
 
 ## Why this shape
 

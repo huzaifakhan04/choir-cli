@@ -47,7 +47,7 @@ function positionalScope() {
   if (!cfg.relayUrl || !cfg.teamKey) {
     console.log(
       "Choir isn't configured yet. Set a relay and team key:\n" +
-        "  npx choircode config --relay <url> --team-key <key> --name <you>\n" +
+        "  npx choir-cli config --relay <url> --team-key <key> --name <you>\n" +
         "(or export CHOIR_RELAY_URL, CHOIR_TEAM_KEY, CHOIR_NAME).",
     );
     process.exit(0);
@@ -88,7 +88,7 @@ function positionalScope() {
   const connect = encodeConnect(cfg.relayUrl, inv.json.code);
   console.log(
     `\n🎶 Choir is live for this session. Teammates can join with one command — no setup:\n\n` +
-      `    npx choircode join ${connect}\n\n` +
+      `    npx choir-cli join ${connect}\n\n` +
       `Scope: ${scope}  (view = watch · suggest = propose steers · write = steer directly)\n` +
       `Relay: ${cfg.relayUrl}\n`,
   );

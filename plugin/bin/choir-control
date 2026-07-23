@@ -73,7 +73,7 @@ function flag(name) {
     console.log(
       `Choir: handed off to ${who}. You're now a viewer.\n` +
         `Tell ${who} to run, in their terminal:\n` +
-        `    npx choircode take <their join code> --name ${who}\n` +
+        `    npx choir-cli take <their join code> --name ${who}\n` +
         `then start Claude Code and run /choir:take-handoff to pick up the context.`,
     );
   } else {

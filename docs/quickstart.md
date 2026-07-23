@@ -38,7 +38,7 @@ export CHOIR_TEAM_KEY="<the team key>"
 export CHOIR_NAME="Alice"
 ```
 
-(Put these in your shell profile, or run `npx choircode config --relay <url> --team-key <key> --name Alice`.)
+(Put these in your shell profile, or run `npx choir-cli config --relay <url> --team-key <key> --name Alice`.)
 
 ## 3. Share a session (host)
 
@@ -55,7 +55,7 @@ It prints a join code:
 ```
 🎶 Choir is live for this session. Teammates can join with one command — no setup:
 
-    npx choircode join choir1_aHR0cHM6Ly9jaG9pci1yZWxheS4uLg
+    npx choir-cli join choir1_aHR0cHM6Ly9jaG9pci1yZWxheS4uLg
 ```
 
 Drop that line in your team chat. Nothing is streamed until you share — before that, the hooks stay silent.
@@ -65,12 +65,12 @@ Drop that line in your team chat. Nothing is streamed until you share — before
 The join code `/choir:share` prints is **self-contained** — the relay is baked in, so teammates need nothing configured:
 
 ```bash
-npx choircode join choir1_aHR0cHM6Ly9jaG9pci1yZWxheS4uLg    # exactly what the host pasted
+npx choir-cli join choir1_aHR0cHM6Ly9jaG9pci1yZWxheS4uLg    # exactly what the host pasted
 ```
 
 Bob replays the session so far, then watches it live. With a `suggest`/`write` code, Bob types a line and presses Enter to steer.
 
-> Prefer to preconfigure the relay for your team? `npx choircode config --relay <url>` also works, and then the short `roomId-inviteId` form is enough.
+> Prefer to preconfigure the relay for your team? `npx choir-cli config --relay <url>` also works, and then the short `roomId-inviteId` form is enough.
 
 ## What each person needs
 
@@ -78,6 +78,6 @@ Bob replays the session so far, then watches it live. With a `suggest`/`write` c
 |------|-------|
 | Relay owner | A Cloudflare account (free), `wrangler` |
 | Host | Claude Code + the `choir` plugin + relay URL + `TEAM_KEY` + their own Claude auth |
-| Viewer | Node 18+ (for `npx choircode`) + relay URL |
+| Viewer | Node 18+ (for `npx choir-cli`) + relay URL |
 
 Everyone uses their **own** Claude auth. The relay never sees a Claude API key, and secrets are redacted on the host before anything is sent. See [security.md](security.md).

@@ -1,11 +1,11 @@
 {
-  "name": "choircode",
+  "name": "choir-cli",
   "version": "0.2.0",
-  "description": "Join a live Claude Code session shared with Choir — watch and steer it from your terminal.",
+  "description": "Choir — join a live Claude Code session your team is sharing: watch and steer it from your terminal.",
   "license": "MIT",
   "author": "huzaifakhan04",
   "type": "commonjs",
-  "bin": { "choircode": "bin/choircode.js" },
+  "bin": { "choir": "bin/choir.js", "choir-cli": "bin/choir.js" },
   "files": ["bin", "lib", "README.md"],
   "engines": { "node": ">=18" },
   "repository": {

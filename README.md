@@ -10,7 +10,7 @@ Your AI coding agent is the most powerful tool on your team. Choir makes it the 
 
 <br/>
 
-[![npm version](https://img.shields.io/npm/v/choircode?color=cb3837&logo=npm&label=choircode)](https://www.npmjs.com/package/choircode)
+[![npm version](https://img.shields.io/npm/v/choir-cli?color=cb3837&logo=npm&label=choir-cli)](https://www.npmjs.com/package/choir-cli)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3da638.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%E2%89%A518-5FA04E?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A5CF6)](https://docs.claude.com/en/docs/claude-code)
@@ -36,7 +36,7 @@ The person driving keeps using Claude Code exactly as they do today. Choir just 
 ```text
   Alice runs Claude Code            Bob, in his terminal
   ───────────────────────           ─────────────────────
-  /choir:share write         ─────▶ npx choircode join choir1_aH…
+  /choir:share write         ─────▶ npx choir-cli join choir1_aH…
                                      ● joined  👥 alice ✍, bob
   ▶ Bash  npm test                   ▶ Bash  npm test          (live)
     ✔ 42 passing                       ✔ 42 passing            (live)
@@ -79,13 +79,13 @@ The person driving keeps using Claude Code exactly as they do today. Choir just 
 
 ## 🏗 How it works
 
-Choir has three pieces: the **plugin** (on the host's machine), a tiny **relay** (self-hosted on Cloudflare), and the **`choircode` CLI** (for teammates).
+Choir has three pieces: the **plugin** (on the host's machine), a tiny **relay** (self-hosted on Cloudflare), and the **`choir-cli` CLI** (for teammates).
 
 ```mermaid
 flowchart LR
     H["🖥️ Host<br/>native Claude Code + Choir plugin"]
     R["☁️ Relay<br/>Cloudflare Durable Object<br/>SQLite event log · WebSocket hub"]
-    V["👥 Viewers<br/>npx choircode"]
+    V["👥 Viewers<br/>npx choir-cli"]
     H -- "redacted events" --> R
     R -- "live fan-out (free)" --> V
     V -- "/steer" --> R
@@ -107,7 +107,7 @@ Everyone uses their **own** Claude auth. For the full design, see [`docs/archite
 | You need | For |
 |----------|-----|
 | [Claude Code](https://docs.claude.com/en/docs/claude-code) | Hosting and (optionally) driving sessions |
-| [Node.js](https://nodejs.org) 18+ | The plugin's hook scripts and `npx choircode` |
+| [Node.js](https://nodejs.org) 18+ | The plugin's hook scripts and `npx choir-cli` |
 | A free [Cloudflare](https://dash.cloudflare.com/sign-up) account | Hosting your team's relay (one-time) |
 
 ### 1. Deploy your relay (once per team)
@@ -150,7 +150,7 @@ export CHOIR_TEAM_KEY="your-team-password"
 export CHOIR_NAME="Alice"
 ```
 
-(Add these to your shell profile, or run `npx choircode config --relay <url> --team-key <key> --name Alice`.)
+(Add these to your shell profile, or run `npx choir-cli config --relay <url> --team-key <key> --name Alice`.)
 
 ### 4. Share a session and invite teammates
 
@@ -163,13 +163,13 @@ It prints a self-contained join code:
 ```text
 🎶 Choir is live for this session. Teammates can join with one command — no setup:
 
-    npx choircode join choir1_aHR0cHM6Ly9jaG9pci1yZWxheS4uLg
+    npx choir-cli join choir1_aHR0cHM6Ly9jaG9pci1yZWxheS4uLg
 ```
 
 Drop that line in your team chat. Teammates run it — the relay is baked into the code, so they need nothing configured:
 
 ```bash
-npx choircode join choir1_aHR0cHM6Ly9jaG9pci1yZWxheS4uLg
+npx choir-cli join choir1_aHR0cHM6Ly9jaG9pci1yZWxheS4uLg
 ```
 
 They replay the session so far, then watch it live. With a `suggest` or `write` code, they can type a line and press **Enter** to steer.
@@ -190,16 +190,18 @@ They replay the session so far, then watch it live. With a `suggest` or `write` 
 | `/choir:approve` | Approve pending steers proposed by `suggest`-scope teammates so they get injected. |
 | `/choir:kick <name>` | Remove a teammate from the session and revoke their access immediately. |
 | `/choir:handoff <name>` | Hand the driver's seat to a teammate. You become a viewer; they continue on their machine with the shared context. |
-| `/choir:take-handoff` | Pick up a session that was handed off to you (run after `npx choircode take`). Loads the context bundle and makes your session the new driver. |
+| `/choir:take-handoff` | Pick up a session that was handed off to you (run after `npx choir-cli take`). Loads the context bundle and makes your session the new driver. |
 
-### Viewer commands (terminal, via `npx choircode`)
+### Viewer commands (terminal, via `npx choir-cli`)
 
 | Command | What it does |
 |---------|--------------|
-| `npx choircode join <code>` | Join a shared session by its code. Replays the history, then tails it live. With `suggest`/`write` scope you can steer. |
-| `npx choircode take <code> --name <you>` | Accept a handoff directed at you, then run `/choir:take-handoff` in Claude Code to continue as the driver. |
-| `npx choircode config --relay <url> [--team-key <key>] [--name <you>]` | Save your relay URL and identity to `~/.config/choir/config.json`. |
-| `npx choircode help` | Show usage. |
+| `npx choir-cli join <code>` | Join a shared session by its code. Replays the history, then tails it live. With `suggest`/`write` scope you can steer. |
+| `npx choir-cli take <code> --name <you>` | Accept a handoff directed at you, then run `/choir:take-handoff` in Claude Code to continue as the driver. |
+| `npx choir-cli config --relay <url> [--team-key <key>] [--name <you>]` | Save your relay URL and identity to `~/.config/choir/config.json`. |
+| `npx choir-cli help` | Show usage. |
+
+> **Tip:** run `npm i -g choir-cli` once and you can type `choir join <code>` instead of `npx choir-cli join <code>`.
 
 **In-session keys (with `suggest`/`write` scope):** type a line + **Enter** to steer · `/who` to see who's connected · `/quit` to leave.
 
@@ -230,7 +232,7 @@ Steering is always injected as *guidance* — the host's own Claude Code permiss
 | `CHOIR_NAME` | host + viewer | Your display name in the roster. |
 | `CHOIR_DATA_DIR` | host | Where per-session state is cached. Defaults to `~/.choir`. |
 
-Anything set in the environment overrides the config file at **`~/.config/choir/config.json`** (written by `npx choircode config`).
+Anything set in the environment overrides the config file at **`~/.config/choir/config.json`** (written by `npx choir-cli config`).
 
 ### Relay secrets (set on Cloudflare)
 
@@ -260,7 +262,7 @@ Read the full model — including what Choir does *not* protect against — in [
 
 > **Today, Choir works with [Claude Code](https://docs.claude.com/en/docs/claude-code) only.** The host-side integration is built on Claude Code's plugin and hooks system, which is specific to Claude Code.
 
-The good news: the **relay** and the **`choircode` client are agent-agnostic** — they speak a simple, documented event protocol. Bringing Choir to another tool means writing a thin *host adapter* for it; the shared session, relay, and viewer stay exactly the same.
+The good news: the **relay** and the **`choir-cli` client are agent-agnostic** — they speak a simple, documented event protocol. Bringing Choir to another tool means writing a thin *host adapter* for it; the shared session, relay, and viewer stay exactly the same.
 
 **Planned:**
 
@@ -285,7 +287,7 @@ Contributions are welcome and appreciated — bug reports, docs, tests, and espe
 |------|------|
 | `plugin/` | The Claude Code plugin — hooks, `/choir:*` commands, on-host redaction (zero-dependency Node) |
 | `relay/` | The Cloudflare Worker + Durable Object (WebSocket hub + SQLite event log + tokens) |
-| `cli/` | `choircode` — the terminal viewer/steerer published to npm |
+| `cli/` | `choir-cli` — the terminal viewer/steerer published to npm |
 | `packages/protocol/` | Shared wire types spoken by every surface |
 | `docs/` | Architecture, security, and quickstart docs |
 

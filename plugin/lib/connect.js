@@ -1,16 +1,16 @@
 "use strict";
 /**
  * Self-contained "connect token" (v0.2). Encodes the relay URL together with a
- * join code so `npx choircode join <token>` needs no prior config. Format:
+ * join code so `npx choir-cli join <token>` needs no prior config. Format:
  *
  *   choir1_<base64url("<relayUrl>|<roomId>-<inviteId>")>
  *
  * Opaque on purpose (reads as a paste-only code, not a clickable URL). The bare
  * "<roomId>-<inviteId>" form still works for already-configured teammates.
  *
- * NOTE: this file is duplicated verbatim in cli/lib/connect.js — the host mints
- * tokens with this copy, the viewer reads them with the cli copy, so they MUST
- * stay byte-identical (guarded by cli/test/connect.test.mjs).
+ * NOTE: kept byte-identical between cli/lib/connect.js and plugin/lib/connect.js
+ * — the host (plugin) mints tokens and the viewer (cli) reads them, so their
+ * encode/decode MUST match (guarded by cli/test/connect.test.mjs).
  */
 
 const PREFIX = "choir1_";

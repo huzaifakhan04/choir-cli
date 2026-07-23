@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 "use strict";
 /**
- * `choircode` — the Choir viewer/steerer. Join a shared Claude Code session by
+ * `choir-cli` — the Choir viewer/steerer. Join a shared Claude Code session by
  * code, replay its history, then tail it live in your terminal. With a
  * suggest/write scope you can also send steering messages back to the host.
  */
@@ -71,12 +71,16 @@ async function postJson(url, body) {
 }
 
 function usage() {
-  console.log(`choircode — join a live Claude Code session shared with Choir
+  console.log(`choir — join a live Claude Code session your team is sharing.
 
 Usage:
-  npx choircode join <code> [--name <you>] [--relay <url>]
-  npx choircode config --relay <url> [--team-key <key>] [--name <you>]
-  npx choircode help
+  choir join <code> [--name <you>] [--relay <url>]     watch & steer a shared session
+  choir take <code> --name <you>                       accept a handoff
+  choir config --relay <url> [--team-key <key>] [--name <you>]
+  choir help
+
+No install needed: run any command as \`npx choir-cli …\` instead of \`choir …\`,
+or \`npm i -g choir-cli\` once to get the \`choir\` command on your PATH.
 
 The <code> is what the host's /choir:share prints — it's self-contained
 (the relay is baked in), so nothing else is needed to join. A short
@@ -97,7 +101,7 @@ function cmdConfig() {
 
 async function cmdJoin(code) {
   if (!code) {
-    console.error("Missing join code. Usage: npx choircode join <code>");
+    console.error("Missing join code. Usage: npx choir-cli join <code>");
     process.exit(1);
   }
   const { relay, roomId, inviteId } = resolveTarget(code);
@@ -176,7 +180,7 @@ function dataDir() {
 
 async function cmdTake(code) {
   if (!code) {
-    console.error("Missing join code. Usage: npx choircode take <code> --name <you>");
+    console.error("Missing join code. Usage: npx choir-cli take <code> --name <you>");
     process.exit(1);
   }
   const { relay, roomId, inviteId } = resolveTarget(code);
