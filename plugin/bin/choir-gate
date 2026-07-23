@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+"use strict";
+/**
+ * PreToolUse gate. Enforces host pause: while the session is paused, tool calls
+ * are blocked (exit 2) so the agent can't mutate anything until the host
+ * resumes. To avoid a network round-trip on every tool call, the paused state is
+ * cached locally with a short TTL — only ~one relay check per 1.5s during a
+ * burst of tools. Unshared sessions are never gated.
+ */
+const fs = require("fs");
+const path = require("path");
+const { resolveDataDir, readSessionCache } = require("../lib/config");
+const { getJson } = require("../lib/relay");
+
+function readStdin() {
+  return new Promise((resolve) => {
+    let d = "";
+    process.stdin.on("data", (c) => (d += c));
+    process.stdin.on("end", () => resolve(d));
+    process.stdin.resume();
+  });
+}
+
+(async () => {
+  let input;
+  try {
+    input = JSON.parse(await readStdin());
+  } catch {
+    process.exit(0);
+  }
+  const sessionId = input && input.session_id;
+  if (!sessionId) process.exit(0);
+
+  const dataDir = resolveDataDir();
+  const cache = readSessionCache(dataDir, sessionId);
+  if (!cache || !cache.roomId || !cache.hostToken) process.exit(0); // not shared → allow
+
+  const statePath = path.join(dataDir, "sessions", `${sessionId}.state.json`);
+  let state = null;
+  try {
+    const s = JSON.parse(fs.readFileSync(statePath, "utf8"));
+    if (Date.now() - s.ts < 1500) state = s;
+  } catch {
+    // no fresh cache
+  }
+  if (!state) {
+    const res = await getJson(`${cache.relayUrl}/sessions/${cache.roomId}/control?since=9999999999`, {
+      token: cache.hostToken,
+      timeoutMs: 1500,
+    });
+    state = { paused: !!(res.ok && res.json && res.json.paused), ts: Date.now() };
+    try {
+      fs.writeFileSync(statePath, JSON.stringify(state));
+    } catch {
+      // best effort
+    }
+  }
+
+  if (state.paused) {
+    process.stderr.write("Choir: the session is paused by the host — tool use is on hold until they resume.");
+    process.exit(2); // block this tool call
+  }
+  process.exit(0);
+})();

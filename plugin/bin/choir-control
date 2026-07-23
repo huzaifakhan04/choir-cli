@@ -1,0 +1,69 @@
+#!/usr/bin/env node
+"use strict";
+/**
+ * Host controls, invoked by the /choir:pause|resume|kick|scope|roster|approve
+ * commands. Each POSTs to the relay's control endpoint (or reads the roster).
+ * The host token is read from the per-session cache written by /choir:share.
+ */
+const { resolveDataDir, readSessionCache } = require("../lib/config");
+const { postJson, getJson } = require("../lib/relay");
+
+function flag(name) {
+  const i = process.argv.indexOf(name);
+  return i >= 0 ? process.argv[i + 1] : undefined;
+}
+
+(async () => {
+  const action = process.argv[2];
+  const sessionId = flag("--session") || process.env.CLAUDE_SESSION_ID;
+  const positional = process.argv.slice(3).filter((a) => !a.startsWith("--"));
+  const cache = sessionId ? readSessionCache(resolveDataDir(), sessionId) : null;
+  if (!cache || !cache.roomId || !cache.hostToken) {
+    console.log("Choir: this session isn't shared yet — run /choir:share first.");
+    process.exit(0);
+  }
+  const base = `${cache.relayUrl}/sessions/${cache.roomId}`;
+
+  if (action === "roster") {
+    const res = await getJson(`${base}/roster`, { token: cache.hostToken });
+    const roster = (res.json && res.json.roster) || [];
+    if (!roster.length) return void console.log("Choir: nobody is connected yet.");
+    console.log("Choir session members:");
+    for (const m of roster) {
+      const tag = m.isWriter ? "writer" : m.scope;
+      console.log(`  • ${m.name} (${tag})`);
+    }
+    process.exit(0);
+  }
+
+  let body;
+  switch (action) {
+    case "pause":
+      body = { action: "pause" };
+      break;
+    case "resume":
+      body = { action: "resume" };
+      break;
+    case "approve":
+      body = { action: "approve" };
+      break;
+    case "kick":
+      if (!positional[0]) return void console.log("Usage: /choir:kick <name>");
+      body = { action: "kick", target: positional[0] };
+      break;
+    case "scope":
+      if (!positional[0] || !positional[1]) return void console.log("Usage: /choir:scope <name> <view|suggest|write>");
+      body = { action: "scope", target: positional[0], scope: positional[1] };
+      break;
+    default:
+      return void console.log(`Choir: unknown control "${action}".`);
+  }
+
+  const res = await postJson(`${base}/control`, body, { token: cache.hostToken });
+  console.log(
+    res.ok
+      ? `Choir: ${action}${positional.length ? " " + positional.join(" ") : ""} ✓`
+      : `Choir: ${action} failed (status ${res.status}).`,
+  );
+  process.exit(0);
+})();

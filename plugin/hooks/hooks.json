@@ -4,7 +4,13 @@
       { "hooks": [{ "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" }] }
     ],
     "PreToolUse": [
-      { "matcher": "*", "hooks": [{ "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" }] }
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" },
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-gate\"" }
+        ]
+      }
     ],
     "PostToolUse": [
       { "matcher": "*", "hooks": [{ "type": "command", "async": true, "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/choir-emit\"" }] }

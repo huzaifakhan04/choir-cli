@@ -62,6 +62,7 @@ export class SessionDO extends DurableObject<Env> {
       if (req.method === "GET" && sub === "steer/next") return await this.steerNext(req, roomId);
       if (req.method === "POST" && sub === "control") return await this.control(req, roomId);
       if (req.method === "GET" && sub === "control") return await this.controlPoll(req, roomId);
+      if (req.method === "GET" && sub === "roster") return await this.rosterEndpoint(req, roomId);
       return this.err("not_found", "unknown route", 404);
     } catch (e) {
       if (e instanceof HttpError) return this.err(e.code, e.message, e.status);
@@ -251,6 +252,12 @@ export class SessionDO extends DurableObject<Env> {
       writerEpoch: s ? s.writer_epoch : 0,
       controls: rows.map((r) => ({ seq: r.seq, action: r.action, data: JSON.parse(r.data) })),
     });
+  }
+
+  /** GET /sessions/:id/roster — host reads who's connected. */
+  private async rosterEndpoint(req: Request, roomId: string): Promise<Response> {
+    await this.requireHost(req, roomId);
+    return this.json({ roster: this.roster() });
   }
 
   private recordControl(action: string, data: unknown): void {
