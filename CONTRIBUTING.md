@@ -4,6 +4,8 @@ First off — thank you! Choir is free and open source, and it gets better becau
 
 By participating, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md).
 
+> 🤖 **Using an AI coding agent** (Claude Code, Cursor, Codex, …)? Read [`AGENTS.md`](AGENTS.md) — it has agent-specific commands, gotchas, and conventions, including authoring commits under **your own** identity (never the AI's).
+
 ## Ways to contribute
 
 - 🐛 **Report a bug** — [open an issue](https://github.com/huzaifakhan04/choir-cli/issues/new) with steps to reproduce.
